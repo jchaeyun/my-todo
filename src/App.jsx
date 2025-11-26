@@ -1,148 +1,160 @@
 import { useState } from 'react'
 
-function TodoItem({ todo, onDelete, onUpdate }) {
+
+function TodoItem({ todoTitle, todoContent, onDelete, todoId, onUpdate }) {
+  const [title, setTitle] = useState(todoTitle);
+  const [content, setContent] = useState(todoContent);
   const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(todo.title); //title of a list
-  const [content, setContent] = useState(todo.content); //content of a list
-
-  function handleUpdate() {
-    onUpdate(todo.id, title, content);
-    setIsEditing(false);
-  }
-
-  if (isEditing) {
-    return (
-      <li>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-
-        <button
-          onClick={handleUpdate}
-        >Save
-        </button>
-        <button
-          onClick={() => setIsEditing(false)}
-        >Cancel
-        </button>
 
 
+  return (
+    <li>
+      {isEditing ?
+        (
+          <>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)} />
+            <textarea
+              type="text"
+              value={content}
+              onChange={(e) => setContent(e.target.value)} />
+            <button
+              onClick={() => {
+                setIsEditing(!isEditing);
+                onUpdate(title, content, todoId);
+              }}>
+              save
+            </button>
+          </>
 
 
-      </li>
-    );
-  } else {
-    return (
-      <>
-        <p>{todo.title}</p>
-        <p>{todo.content}</p>
-        <button
-          onClick={() => onDelete(todo.id)}>
-          Delete
-        </button>
-        <button
-          onClick={() => setIsEditing(true)}>
-          Edit
-        </button>
-      </>
+        )
+        :
+        (
+          <>
+            <p>{todoTitle}</p>
+            <p>{todoContent}</p>
+            <button
+              onClick={() => setIsEditing(!isEditing)}>
+              edit
+            </button>
+            <button
+              onClick={() => onDelete(todoId)}>
+              delete
+            </button>
+          </>
+        )
 
-    );
-  }
+      }
+    </li>
 
-
+  );
 }
 
+
 function App() {
-  const [todos, setTodos] = useState([]); //to-do list array
-  const [inputTitle, setInputTitle] = useState(''); //title of a list
-  const [inputContent, setInputContent] = useState(''); //content of a list
+  const [inputTitle, setInputTitle] = useState('');
+  const [inputContent, setInputContent] = useState('');
+  const [todoLists, setTodoLists] = useState([]);
 
-  function addTodo() {
-    if (inputTitle === '' || inputContent === '') return; //if the title or the content is not filled out
-
-    const newTodo = {
+  function handleAddTodo() {
+    const todo = {
       id: Date.now(),
       title: inputTitle,
-      content: inputContent,
-      completed: false
+      content: inputContent
     }
 
-    setTodos([
-      newTodo,
-      ...todos
-
+    setTodoLists([
+      todo,
+      ...todoLists
     ]);
 
-    //empty the input
+
+
     setInputTitle('');
     setInputContent('');
   }
 
-  function deleteTodo(targetId) {
-    setTodos(todos.filter(todo =>
-      todo.id !== targetId
+  function handleCancelTodo() {
+    setInputTitle('');
+    setInputContent('');
+  }
+
+  function handleDeleteAll() {
+    setTodoLists([]);
+  }
+
+  function handleDeleteTodo(targetId) {
+    setTodoLists(todoLists.filter(todoList =>
+      todoList.id !== targetId
     ));
   }
 
-  function updateTodo(targetId, newTitle, newContent) {
-    setTodos(todos.map(todo => {
-      if (todo.id === targetId) {
-        return {
-          ...todo,
-          title: newTitle,
-          content: newContent
-        }
-      } else {
-        return todo;
-      }
+  function handleUpdate(newTitle, newContent, id) {
+    setTodoLists(todoLists.map(todoList =>
+      id === todoList.id ? { ...todoList, title: newTitle, content: newContent } : todoList
+    ));
 
-    }))
   }
+
 
 
 
   return (
-    <div>
+    <>
       <h1>To-do List</h1>
-
       <div>
         <input
           type="text"
-          placeholder='title'
           value={inputTitle}
-          onChange={(e) => setInputTitle(e.target.value)}
+          onChange={e => setInputTitle(e.target.value)}
+          placeholder='What do you wanna do?'
         />
         <textarea
-          placeholder='content'
+          type="text"
           value={inputContent}
-          onChange={(e) => setInputContent(e.target.value)}
+          onChange={e => setInputContent(e.target.value)}
+          placeholder='How are you gonna do?'
         />
-        <button onClick={addTodo}>
+        <button
+          onClick={handleAddTodo}>
           add
+        </button>
+        <button
+          onClick={handleCancelTodo}>
+          cancel
         </button>
       </div>
 
-
       <ul>
-        {todos.map(todo => (
+
+        {todoLists.map(todoList => (
           <TodoItem
-            key={todo.id}
-            todo={todo}
-            onDelete={deleteTodo}
-            onUpdate={updateTodo}
+            key={todoList.id}
+            todoId={todoList.id}
+            todoLists={todoLists}
+            todoTitle={todoList.title}
+            todoContent={todoList.content}
+            onDelete={handleDeleteTodo}
+            onUpdate={handleUpdate}
           />
-        ))
-        }
+        )
+
+
+
+
+
+        )}
       </ul>
 
+      <button
+        onClick={handleDeleteAll}>
+        delete all the lists
+      </button>
+    </>
 
-    </div>
   );
 }
 
